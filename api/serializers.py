@@ -10,7 +10,7 @@ class AchievementBaseSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
-    achievements = AchievementBaseSerializer(many=True)
+    achievements = AchievementBaseSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
@@ -29,8 +29,14 @@ class QuestionBaseSerializer(serializers.ModelSerializer):
         fields = ('id', 'context', 'external_source', 'language', 'question_type', 'get_gap_markdown')
 
 
+class AnswerBaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = ('id', 'context', 'is_correct')
+
+
 class AnswerSerializer(serializers.ModelSerializer):
-    question = QuestionBaseSerializer(many=False)
+    question = QuestionBaseSerializer(many=False, read_only=True)
 
     class Meta:
         model = Answer
@@ -38,8 +44,8 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    answers = AnswerSerializer(many=True)
-    language = LanguageSerializer(many=False)
+    answers = AnswerBaseSerializer(many=True, read_only=True)
+    language = LanguageSerializer(many=False, read_only=True)
 
     class Meta:
         model = Question

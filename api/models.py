@@ -23,7 +23,7 @@ class Question(models.Model):
     GAP_MARKDOWN = "%_%"
 
     context = models.CharField(max_length=32)
-    external_source = models.TextField(max_length=1024)
+    external_source = models.TextField(max_length=1024, null=True, blank=True)
     language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='questions')
     question_type = models.CharField(
         max_length=3,
@@ -37,7 +37,7 @@ class Question(models.Model):
             return None
 
     def __str__(self):
-        return self.language.name % self.question_type + '(' + self.context + ')'
+        return self.language.name + ' - ' + self.question_type + '(' + self.context + ')'
 
 
 class Answer(models.Model):
@@ -46,7 +46,7 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
 
     def __str__(self):
-        return self.context + str(self.is_correct)
+        return 'Ans: ' + self.context + ' (' + str(self.is_correct) + ')'
 
 
 """
