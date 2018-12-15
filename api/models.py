@@ -15,6 +15,7 @@ LEVEL = (
 
 class Language(models.Model):
     name = models.CharField(max_length=32)
+    users = models.ManyToManyField(User, related_name='selected_languages')
 
     def __str__(self):
         return self.name
@@ -115,7 +116,7 @@ class GivenAnswer(models.Model):
     round = models.ForeignKey(Round, on_delete=models.CASCADE, related_name='given_answers')
     score = models.ForeignKey(Score, on_delete=models.SET_NULL, related_name='given_answers', null=True, blank=True)
 
-    def get_is_correct(self):
+    def is_correct(self):
         return self.answer.is_correct
 
 
@@ -137,3 +138,9 @@ class Achievement(models.Model):
 """
     Extension for default User Model to implement relations between users
 """
+
+
+class UserFollowing(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_by')
+
