@@ -1,8 +1,8 @@
 from django.contrib.auth.models import User
 from rest_framework import viewsets
-from .models import Language, Answer, Question, Achievement
+from .models import Language, Answer, Question, Achievement, Score, Round, GivenAnswer, Challenge
 from .serializers import UserSerializer, LanguageSerializer, QuestionSerializer, AnswerSerializer, \
-    AchievementBaseSerializer
+    AchievementBaseSerializer, ScoreSerializer, ChallengeSerializer, RoundSerializer, GivenAnswerSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -29,5 +29,27 @@ class AnswerViewSet(viewsets.ModelViewSet):
 
 
 class AchievementViewSet(viewsets.ModelViewSet):
-    queryset = Achievement.objects.all().order_by('-date_joined')
+    queryset = Achievement.objects.all()
     serializer_class = AchievementBaseSerializer
+
+
+class ScoreViewSet(viewsets.ModelViewSet):
+    queryset = Score.objects.all()
+    serializer_class = ScoreSerializer
+
+
+class ChallengeViewSet(viewsets.ModelViewSet):
+    queryset = Challenge.objects.all()
+    serializer_class = ChallengeSerializer
+
+
+class RoundViewSet(viewsets.ModelViewSet):
+    queryset = Round.objects.all()
+    serializer_class = RoundSerializer
+
+
+class GivenAnswerViewSet(viewsets.ModelViewSet):
+    queryset = GivenAnswer.objects.all()
+    serializer_class = GivenAnswerSerializer
+
+
