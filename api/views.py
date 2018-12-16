@@ -7,7 +7,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import filters
 from django.http.response import HttpResponseNotFound
-from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
 from .models import Language, Answer, Question, Achievement, Score, Round, GivenAnswer, Challenge
@@ -47,6 +46,8 @@ class UserViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = UserAchievementsSerializer(instance)
         return Response(serializer.data)
+
+    # TODO: add endpoint for adding user's follows
 
 
 class LanguageViewSet(viewsets.ModelViewSet):

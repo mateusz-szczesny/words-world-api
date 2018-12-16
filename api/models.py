@@ -133,9 +133,6 @@ class GivenAnswer(models.Model):
     round = models.ForeignKey(Round, on_delete=models.CASCADE, related_name='given_answers')
     score = models.ForeignKey(Score, on_delete=models.SET_NULL, related_name='given_answers', null=True, blank=True)
 
-    def is_correct(self):
-        return self.answer.is_correct
-
 
 """
     Achievement models 

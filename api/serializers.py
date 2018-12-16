@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Language, Question, Answer, Achievement, Score, Challenge, GivenAnswer, Round, UserFollowing
+from .models import Language, Question, Answer, Achievement, Score, Challenge, GivenAnswer, Round
 
 
 class AchievementBaseSerializer(serializers.ModelSerializer):
@@ -86,6 +86,7 @@ class ChallengeSerializer(serializers.ModelSerializer):
 
 class GivenAnswerSerializer(serializers.ModelSerializer):
     user = UserAchievementsSerializer(many=False, read_only=True)
+    is_correct = serializers.BooleanField(source='answer.is_correct')
     
     class Meta:
         model = GivenAnswer
