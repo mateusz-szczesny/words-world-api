@@ -12,6 +12,7 @@ router.register(r'scores', views.ScoreViewSet, base_name='scores')
 router.register(r'challenge', views.ChallengeViewSet, base_name='challenge')
 router.register(r'rounds', views.RoundViewSet, base_name='rounds')
 router.register(r'given_answers', views.GivenAnswerViewSet, base_name='given_answers')
+router.register(r'following', views.UserFollowingVIewSet, base_name='following')
 router.register(r'signup', views.SignUpView, base_name='signup')
 
 urlpatterns = [

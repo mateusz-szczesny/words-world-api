@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Language, Question, Answer, Achievement, Score, Challenge, GivenAnswer, Round
+from .models import Language, Question, Answer, Achievement, Score, Challenge, GivenAnswer, Round, UserFollowing
 
 
 class AchievementBaseSerializer(serializers.ModelSerializer):
@@ -99,3 +99,12 @@ class ScoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Score
         fields = ('id', 'status', 'challenge', 'given_answers')
+
+
+class UserFollowingSerializer(serializers.ModelSerializer):
+    user = UserBaseSerializer(many=False)
+    following = UserBaseSerializer(many=False)
+
+    class Meta:
+        model = UserFollowing
+        fields = ('id', 'user', 'following')

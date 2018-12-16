@@ -3,19 +3,20 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import filters
 from django.http.response import HttpResponseNotFound
 from rest_framework.viewsets import GenericViewSet
 
-from .models import Language, Answer, Question, Achievement, Score, Round, GivenAnswer, Challenge
+from .models import Language, Answer, Question, Achievement, Score, Round, GivenAnswer, Challenge, UserFollowing
 from .serializers import (
     UserAchievementsSerializer, LanguageSerializer, QuestionSerializer,
     AnswerSerializer, AchievementBaseSerializer, ScoreSerializer,
     ChallengeSerializer, RoundSerializer, GivenAnswerSerializer,
-    UserBaseSerializer
-)
+    UserBaseSerializer,
+    UserFollowingSerializer)
 
 
 class SignUpView(mixins.CreateModelMixin,
@@ -24,7 +25,9 @@ class SignUpView(mixins.CreateModelMixin,
     permission_classes = (AllowAny,)
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(mixins.ListModelMixin,
+                  mixins.RetrieveModelMixin,
+                  GenericViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserBaseSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
@@ -32,25 +35,15 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username', 'email')
     authentication_classes = (TokenAuthentication,)
 
-    @action(detail=False, methods=['get'])
-    def following(self, request, *args, **kwargs):
-        user = request.user
-        followings = user.following.all()
-        followed_users = []
-        for follow in followings:
-            followed_users.append(follow.following)
-        serializer = UserBaseSerializer(followed_users, many=True)
-        return Response(serializer.data)
-
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = UserAchievementsSerializer(instance)
         return Response(serializer.data)
 
-    # TODO: add endpoint for adding user's follows
 
-
-class LanguageViewSet(viewsets.ModelViewSet):
+class LanguageViewSet(mixins.ListModelMixin,
+                      mixins.RetrieveModelMixin,
+                      GenericViewSet):
     queryset = Language.objects.order_by('name')
     serializer_class = LanguageSerializer
     authentication_classes = (TokenAuthentication,)
@@ -76,7 +69,41 @@ class LanguageViewSet(viewsets.ModelViewSet):
             serializer = LanguageSerializer(languages, many=True)
             return Response(serializer.data)
         else:
-            return HttpResponseNotFound()
+            return Response([], status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'])
+    def unsubscribe(self, request, *args, **kwargs):
+        user = request.user
+        language = self.get_object()
+        if language:
+            user.selected_languages.remove(language)
+            user.save()
+
+            return Response('', status=status.HTTP_204_NO_CONTENT)
+        else:
+            return HttpResponseNotFound('Language not found')
+
+
+class UserFollowingVIewSet(mixins.CreateModelMixin,
+                           mixins.DestroyModelMixin,
+                           mixins.ListModelMixin,
+                           GenericViewSet):
+    serializer_class = UserFollowingSerializer
+    authentication_classes = (TokenAuthentication,)
+
+    def get_queryset(self):
+        user = self.request.user
+        followings = UserFollowing.objects.filter(user=user)
+        return followings
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        following_id = request.data['user']
+        following = get_object_or_404(User, pk=following_id)
+
+        user_following = UserFollowing.objects.create(user=user, following=following)
+        serializer = UserFollowingSerializer(user_following, many=False)
+        return Response(serializer.data)
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
