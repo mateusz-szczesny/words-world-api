@@ -1,12 +1,29 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+from rest_framework.authtoken.models import Token
+
+
+@receiver(post_save, sender=User)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    """
+    Execute after user record save
+    :param sender: User model
+    :param instance: Saved user
+    :param created: Flag if created
+    :param kwargs: Misc
+    :return: None
+    """
+    if created:
+        Token.objects.create(user=instance)
+
 
 LEVEL = (
     ('E', 'EASY'),
     ('M', 'MEDIUM'),
     ('G', 'HARD'),
 )
-
 
 """
     Language data model classes for lang definition and answer-question examples storing
@@ -15,7 +32,7 @@ LEVEL = (
 
 class Language(models.Model):
     name = models.CharField(max_length=32)
-    users = models.ManyToManyField(User, related_name='selected_languages')
+    users = models.ManyToManyField(User, related_name='selected_languages', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -79,7 +96,7 @@ class Challenge(models.Model):
     language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='challenges')
 
     def __str__(self):
-        return super().__str__() + str(self.language)
+        return str(self.pk) + ' ' + str(self.language)
 
 
 class Score(models.Model):

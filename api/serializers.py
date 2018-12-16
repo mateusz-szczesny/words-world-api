@@ -26,10 +26,15 @@ class AnswerBaseSerializer(serializers.ModelSerializer):
 class UserBaseSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email',)
+        fields = ('id', 'username', 'email', 'password')
+        extra_kwargs = {'password': {'required': True, 'write_only': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserAchievementsSerializer(serializers.HyperlinkedModelSerializer):
     achievements = AchievementBaseSerializer(many=True, read_only=True)
 
     class Meta:
@@ -80,7 +85,7 @@ class ChallengeSerializer(serializers.ModelSerializer):
 
 
 class GivenAnswerSerializer(serializers.ModelSerializer):
-    user = UserSerializer(many=False, read_only=True)
+    user = UserAchievementsSerializer(many=False, read_only=True)
     
     class Meta:
         model = GivenAnswer
@@ -93,23 +98,3 @@ class ScoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Score
         fields = ('id', 'status', 'challenge', 'given_answers')
-
-
-class UserChallenge(serializers.HyperlinkedModelSerializer):
-    scores = ScoreSerializer(many=True)
-
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'scores')
-
-
-class UserFollowingSerializer(serializers.ModelSerializer):
-    users = UserBaseSerializer(many=True)
-
-    class Meta:
-        model = UserFollowing
-        fields = ('users',)
-
-
-
-
