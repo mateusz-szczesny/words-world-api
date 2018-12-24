@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 import dj_database_url
+import django_heroku
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,6 +26,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = [ '*', ]
 
+if os.environ.get('SECRET_KEY', ''):
+    pass
+else:
+    SECRET_KEY = '!al3ccb4p7u0r6gfe$lj_mif37^nn$oznzx0j2w@h=8b#07xyh'
 
 # Application definition
 
@@ -48,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'words_world.urls'
@@ -138,3 +144,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
+
+# Activate Django-Heroku.
+django_heroku.settings(locals())
