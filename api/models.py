@@ -32,7 +32,7 @@ LEVEL = (
 
 class Language(models.Model):
     name = models.CharField(max_length=32)
-    users = models.ManyToManyField(User, related_name='selected_languages')
+    users = models.ManyToManyField(User, related_name='selected_languages', null=True, blank=True)
 
     def __str__(self):
         return self.name
