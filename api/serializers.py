@@ -34,7 +34,13 @@ class UserBaseSerializer(serializers.HyperlinkedModelSerializer):
         return user
 
 
-class UserAchievementsSerializer(serializers.HyperlinkedModelSerializer):
+class LanguageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Language
+        fields = ('id', 'name')
+
+
+class UserAchievementSerializer(serializers.HyperlinkedModelSerializer):
     achievements = AchievementBaseSerializer(many=True, read_only=True)
 
     class Meta:
@@ -42,10 +48,14 @@ class UserAchievementsSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'username', 'email', 'achievements')
 
 
-class LanguageSerializer(serializers.ModelSerializer):
+class UserFullSerializer(serializers.HyperlinkedModelSerializer):
+    achievements = AchievementBaseSerializer(many=True, read_only=True)
+    selected_languages = LanguageSerializer(many=True, read_only=True)
+    following = UserBaseSerializer(many=True, read_only=True)
+
     class Meta:
-        model = Language
-        fields = ('id', 'name')
+        model = User
+        fields = ('id', 'username', 'email', 'achievements', 'selected_languages', 'following')
 
 
 class AnswerSerializer(serializers.ModelSerializer):
@@ -85,7 +95,7 @@ class ChallengeSerializer(serializers.ModelSerializer):
 
 
 class GivenAnswerSerializer(serializers.ModelSerializer):
-    user = UserAchievementsSerializer(many=False, read_only=True)
+    user = UserBaseSerializer(many=False, read_only=True)
     is_correct = serializers.BooleanField(source='answer.is_correct')
     
     class Meta:

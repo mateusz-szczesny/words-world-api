@@ -4,7 +4,6 @@ from rest_framework import viewsets, status, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import filters
 from django.http.response import HttpResponseNotFound
@@ -12,17 +11,11 @@ from rest_framework.viewsets import GenericViewSet
 
 from .models import Language, Answer, Question, Achievement, Score, Round, GivenAnswer, Challenge, UserFollowing
 from .serializers import (
-    UserAchievementsSerializer, LanguageSerializer, QuestionSerializer,
+    UserFullSerializer, LanguageSerializer, QuestionSerializer,
     AnswerSerializer, AchievementBaseSerializer, ScoreSerializer,
     ChallengeSerializer, RoundSerializer, GivenAnswerSerializer,
-    UserBaseSerializer,
+    UserBaseSerializer,UserAchievementSerializer,
     UserFollowingSerializer)
-
-
-class SignUpView(mixins.CreateModelMixin,
-                 GenericViewSet):
-    serializer_class = UserBaseSerializer
-    permission_classes = (AllowAny,)
 
 
 class UserViewSet(mixins.ListModelMixin,
@@ -35,10 +28,23 @@ class UserViewSet(mixins.ListModelMixin,
     search_fields = ('username', 'email')
     authentication_classes = (TokenAuthentication,)
 
+    def list(self, request, *args, **kwargs):
+        serializer = UserAchievementSerializer(self.queryset, many=True)
+        return Response(serializer.data)
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = UserAchievementsSerializer(instance)
+        serializer = UserAchievementSerializer(instance)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def me(self, request, *args, **kwargs):
+        user = request.user
+        if user:
+            serializer = UserFullSerializer(user, many=False)
+            return Response(serializer.data)
+        else:
+            return HttpResponseNotFound('User not found')
 
 
 class LanguageViewSet(mixins.ListModelMixin,
