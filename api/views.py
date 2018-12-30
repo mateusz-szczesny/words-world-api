@@ -22,15 +22,11 @@ class UserViewSet(mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
                   GenericViewSet):
     queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserBaseSerializer
+    serializer_class = UserAchievementSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('id', 'username')
     search_fields = ('username', 'email')
     authentication_classes = (TokenAuthentication,)
-
-    def list(self, request, *args, **kwargs):
-        serializer = UserAchievementSerializer(self.queryset, many=True)
-        return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
