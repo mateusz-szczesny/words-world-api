@@ -37,6 +37,12 @@ class Language(models.Model):
     def __str__(self):
         return self.name
 
+    def __eq__(self, other):
+        if isinstance(other, Language):
+            return self.name == other.name
+        else:
+            return False
+
 
 class Question(models.Model):
     TYPE_OF_QUESTION = (

@@ -35,9 +35,22 @@ class UserBaseSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class LanguageSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta:
         model = Language
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'is_subscribed')
+
+    def get_is_subscribed(self, obj):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+
+        if user in obj.users.all():
+            return True
+        else:
+            return False
 
 
 class UserAchievementSerializer(serializers.HyperlinkedModelSerializer):
