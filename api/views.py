@@ -14,8 +14,7 @@ from .serializers import (
     UserFullSerializer, LanguageSerializer, QuestionSerializer,
     AnswerSerializer, AchievementBaseSerializer, ScoreSerializer,
     ChallengeSerializer, RoundSerializer, GivenAnswerSerializer,
-    UserBaseSerializer,UserAchievementSerializer,
-    UserFollowingSerializer)
+    UserAchievementSerializer, UserFollowingSerializer)
 
 
 class UserViewSet(mixins.ListModelMixin,
@@ -58,8 +57,7 @@ class LanguageViewSet(mixins.ListModelMixin,
             user.selected_languages.add(language)
             user.save()
 
-            serializer = LanguageSerializer(language, many=False)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(status=status.HTTP_201_CREATED)
         else:
             return HttpResponseNotFound('Language not found')
 
@@ -71,7 +69,7 @@ class LanguageViewSet(mixins.ListModelMixin,
             serializer = LanguageSerializer(languages, many=True)
             return Response(serializer.data)
         else:
-            return Response([], status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post'])
     def unsubscribe(self, request, *args, **kwargs):
@@ -81,9 +79,9 @@ class LanguageViewSet(mixins.ListModelMixin,
             user.selected_languages.remove(language)
             user.save()
 
-            return Response('', status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_201_CREATED)
         else:
-            return HttpResponseNotFound('Language not found')
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class UserFollowingVIewSet(mixins.CreateModelMixin,
