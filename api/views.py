@@ -19,6 +19,7 @@ from .serializers import (
 
 class UserViewSet(mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
+                  mixins.UpdateModelMixin,
                   GenericViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserAchievementSerializer
@@ -31,6 +32,21 @@ class UserViewSet(mixins.ListModelMixin,
         instance = self.get_object()
         serializer = UserAchievementSerializer(instance)
         return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        if self.get_object() is request.user:
+            user = self.get_object()
+            first_name = request.data.get('first_name', '')
+            if first_name:
+                user.first_name = first_name
+            last_name = request.data.get('last_name', '')
+            if last_name:
+                user.last_name = last_name
+            user.save()
+
+            Response(status=status.HTTP_202_ACCEPTED)
+        else:
+            Response(status=status.HTTP_403_FORBIDDEN)
 
     @action(detail=False, methods=['get'])
     def me(self, request, *args, **kwargs):
