@@ -29,12 +29,7 @@ class UserBaseSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password')
         extra_kwargs = {'password': {'required': True, 'write_only': True},
                         'first_name': {'read_only': True},
-                        'last_name': {'read_only': True},
-                        }
-
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
+                        'last_name': {'read_only': True}}
 
 
 class LanguageSerializer(serializers.ModelSerializer):
