@@ -14,12 +14,11 @@ from .serializers import (
     UserFullSerializer, LanguageSerializer, QuestionSerializer,
     AnswerSerializer, AchievementBaseSerializer, ScoreSerializer,
     ChallengeSerializer, RoundSerializer, GivenAnswerSerializer,
-    UserAchievementSerializer, UserFollowingSerializer)
+    UserAchievementSerializer, UserFollowingSerializer, UserBaseSerializer)
 
 
 class UserViewSet(mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
                   GenericViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserAchievementSerializer
@@ -30,12 +29,41 @@ class UserViewSet(mixins.ListModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = UserAchievementSerializer(instance)
+        serializer = UserAchievementSerializer(instance, context={"request": request}, many=False)
         return Response(serializer.data)
 
-    def update(self, request, *args, **kwargs):
-        if self.get_object() is request.user:
-            user = self.get_object()
+    @action(detail=True, methods=['post'])
+    def follow(self, request, *args, **kwargs):
+        user = request.user
+        new_following = self.get_object()
+        following = get_object_or_404(User, pk=new_following.pk)
+        UserFollowing.objects.create(user=user, following=following)
+
+        return Response(status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'])
+    def followings(self, request, *args, **kwargs):
+        user = request.user
+        if user:
+            followings = []
+            for follow in user.following.all():
+                followings.append(follow.following)
+            serializer = UserBaseSerializer(followings, many=True)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get', 'put'])
+    def me(self, request, *args, **kwargs):
+        if request.method == 'GET':
+            user = request.user
+            if user:
+                serializer = UserFullSerializer(user, context={"request": request}, many=False)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        elif request.method == 'PUT':
+            user = request.user
             first_name = request.data.get('first_name', '')
             if first_name:
                 user.first_name = first_name
@@ -44,18 +72,9 @@ class UserViewSet(mixins.ListModelMixin,
                 user.last_name = last_name
             user.save()
 
-            Response(status=status.HTTP_202_ACCEPTED)
+            return Response(status=status.HTTP_202_ACCEPTED)
         else:
-            Response(status=status.HTTP_403_FORBIDDEN)
-
-    @action(detail=False, methods=['get'])
-    def me(self, request, *args, **kwargs):
-        user = request.user
-        if user:
-            serializer = UserFullSerializer(user, many=False)
-            return Response(serializer.data)
-        else:
-            return HttpResponseNotFound('User not found')
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class LanguageViewSet(mixins.ListModelMixin,
@@ -64,6 +83,10 @@ class LanguageViewSet(mixins.ListModelMixin,
     queryset = Language.objects.order_by('name')
     serializer_class = LanguageSerializer
     authentication_classes = (TokenAuthentication,)
+
+    def list(self, request, *args, **kwargs):
+        serializer = LanguageSerializer(self.queryset, context={"request": request}, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def subscribe(self, request, *args, **kwargs):
@@ -100,26 +123,9 @@ class LanguageViewSet(mixins.ListModelMixin,
             return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-class UserFollowingVIewSet(mixins.CreateModelMixin,
-                           mixins.DestroyModelMixin,
-                           mixins.ListModelMixin,
-                           GenericViewSet):
-    serializer_class = UserFollowingSerializer
-    authentication_classes = (TokenAuthentication,)
-
-    def get_queryset(self):
-        user = self.request.user
-        followings = UserFollowing.objects.filter(user=user)
-        return followings
-
-    def create(self, request, *args, **kwargs):
-        user = request.user
-        following_id = request.data['user']
-        following = get_object_or_404(User, pk=following_id)
-
-        user_following = UserFollowing.objects.create(user=user, following=following)
-        serializer = UserFollowingSerializer(user_following, many=False)
-        return Response(serializer.data)
+"""
+TODO: Implement Challenge logic
+"""
 
 
 class QuestionViewSet(viewsets.ModelViewSet):

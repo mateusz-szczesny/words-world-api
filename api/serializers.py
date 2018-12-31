@@ -23,11 +23,14 @@ class AnswerBaseSerializer(serializers.ModelSerializer):
         fields = ('id', 'context', 'is_correct')
 
 
-class UserBaseSerializer(serializers.HyperlinkedModelSerializer):
+class UserBaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password')
-        extra_kwargs = {'password': {'required': True, 'write_only': True}}
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password')
+        extra_kwargs = {'password': {'required': True, 'write_only': True},
+                        'first_name': {'read_only': True},
+                        'last_name': {'read_only': True},
+                        }
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -53,22 +56,57 @@ class LanguageSerializer(serializers.ModelSerializer):
             return False
 
 
-class UserAchievementSerializer(serializers.HyperlinkedModelSerializer):
+class UserAchievementSerializer(serializers.ModelSerializer):
     achievements = AchievementBaseSerializer(many=True, read_only=True)
+    is_friend = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'achievements')
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'achievements', 'is_friend')
+
+    def get_is_friend(self, obj):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+
+        if user:
+            followings = []
+            for follow in user.following.all():
+                followings.append(follow.following)
+            if obj in followings:
+                return True
+            else:
+                return False
+        else:
+            return False
 
 
-class UserFullSerializer(serializers.HyperlinkedModelSerializer):
+class UserFullSerializer(serializers.ModelSerializer):
     achievements = AchievementBaseSerializer(many=True, read_only=True)
     selected_languages = LanguageSerializer(many=True, read_only=True)
-    following = UserBaseSerializer(many=True, read_only=True)
+    following = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'achievements', 'selected_languages', 'following')
+        fields = ('id', 'username', 'first_name',
+                  'last_name', 'email', 'achievements',
+                  'selected_languages', 'following')
+
+    def get_following(self, obj):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+
+        if user:
+            followings = []
+            for follow in user.following.all():
+                followings.append(follow.following)
+            serializer = UserBaseSerializer(followings, many=True)
+            return serializer.data
+        else:
+            return []
 
 
 class AnswerSerializer(serializers.ModelSerializer):

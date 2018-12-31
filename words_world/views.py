@@ -14,7 +14,7 @@ class SignUpView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = User.objects.create_user(**serializer.validated_data)
+        user = serializer.create(validated_data=request.data)
         token, _ = Token.objects.get_or_create(user=user)
         return Response({'token': token.key})
 
