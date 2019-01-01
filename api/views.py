@@ -41,6 +41,15 @@ class UserViewSet(mixins.ListModelMixin,
 
         return Response(status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['post'])
+    def unfollow(self, request, *args, **kwargs):
+        user = request.user
+        following = self.get_object()
+        user_following = get_object_or_404(UserFollowing, user=user, following=following)
+        user_following.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=False, methods=['get'])
     def followings(self, request, *args, **kwargs):
         user = request.user

@@ -54,10 +54,13 @@ class LanguageSerializer(serializers.ModelSerializer):
 class UserAchievementSerializer(serializers.ModelSerializer):
     achievements = AchievementBaseSerializer(many=True, read_only=True)
     is_friend = serializers.SerializerMethodField()
+    selected_languages = LanguageSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'achievements', 'is_friend')
+        fields = ('id', 'username', 'first_name', 
+                  'last_name', 'email', 'achievements',
+                  'is_friend', 'selected_languages')
 
     def get_is_friend(self, obj):
         user = None
