@@ -81,7 +81,8 @@ class UserViewSet(mixins.ListModelMixin,
                 user.last_name = last_name
             user.save()
 
-            return Response(status=status.HTTP_202_ACCEPTED)
+            serializer = UserFullSerializer(user, context={"request": request}, many=False)
+            return Response(serializer.data)
         else:
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
