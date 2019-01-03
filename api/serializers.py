@@ -37,7 +37,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Language
-        fields = ('id', 'name', 'is_subscribed')
+        fields = ('id', 'name', 'is_subscribed', 'language_code')
 
     def get_is_subscribed(self, obj):
         user = None
