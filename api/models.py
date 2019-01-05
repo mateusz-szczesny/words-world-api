@@ -19,6 +19,12 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
+@receiver(post_save, sender=User)
+def create_blank_statistics(sender, instance=None, created=False, **kwargs):
+    if created:
+        Statistic.objects.create(user=instance, correctly_swiped_taboo_cards=0, translated_words=0)
+
+
 LEVEL = (
     ('E', 'EASY'),
     ('M', 'MEDIUM'),
@@ -32,7 +38,7 @@ LEVEL = (
 
 class Language(models.Model):
     name = models.CharField(max_length=32)
-    users = models.ManyToManyField(User, related_name='selected_languages', null=True, blank=True)
+    users = models.ManyToManyField(User, related_name='selected_languages', blank=True)
     language_code = models.CharField(max_length=32, null=True, blank=True)
 
     def __str__(self):
@@ -157,10 +163,16 @@ class Achievement(models.Model):
 
 
 """
-    Extension for default User Model to implement relations between users
+    Extension for default User Model to implement relations between users and statistics 
 """
 
 
 class UserFollowing(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
     following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_by')
+
+
+class Statistic(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='statistics')
+    correctly_swiped_taboo_cards = models.IntegerField()
+    translated_words = models.IntegerField()

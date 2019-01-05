@@ -1,12 +1,19 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Language, Question, Answer, Achievement, Score, Challenge, GivenAnswer, Round, UserFollowing
+from .models import Language, Question, Answer, Achievement, Score, Challenge, GivenAnswer, Round, UserFollowing, \
+    Statistic
 
 
 class AchievementBaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Achievement
         fields = ('id', 'name', 'condition', 'font_awesome_icon')
+
+
+class StatisticSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Statistic
+        fields = ('correctly_swiped_taboo_cards', 'translated_words')
 
 
 class QuestionBaseSerializer(serializers.ModelSerializer):
@@ -38,6 +45,7 @@ class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
         fields = ('id', 'name', 'is_subscribed', 'language_code')
+        ordering = ('name', )
 
     def get_is_subscribed(self, obj):
         user = None
@@ -61,6 +69,7 @@ class UserAchievementSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'first_name', 
                   'last_name', 'email', 'achievements',
                   'is_friend', 'selected_languages')
+        ordering = ('username', 'first_name', 'last_name')
 
     def get_is_friend(self, obj):
         user = None
