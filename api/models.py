@@ -63,7 +63,7 @@ class Question(models.Model):
     MAX_TIME = {
         'E': 90,
         'M': 60,
-        'H': 30
+        'H': 30,
     }
 
     DEFAULT_MAX_TIME = 60
@@ -153,13 +153,33 @@ class GivenAnswer(models.Model):
 
 
 class Achievement(models.Model):
-    condition = models.CharField(max_length=2048)
+    LEVEL_CHOICES = (
+        ("1", "Bronze"),
+        ("2", "Silver"),
+        ("3", "Gold"),
+        ("4", "Diamond"),
+    )
+
+    condition = models.TextField(max_length=2048)
     name = models.CharField(max_length=128)
     font_awesome_icon = models.TextField(max_length=2048)
-    users = models.ManyToManyField(User, related_name="achievements")
+    users = models.ManyToManyField(User, related_name="achievements", blank=True)
+    level = models.CharField(max_length=1, choices=LEVEL_CHOICES)
+    score = models.IntegerField()
 
     def __str__(self):
-        return str(self.name) + ' - ' + str(self.condition)
+        return str(self.name)
+
+    def try_award_to(self, user):
+        has_achievement = self in user.achievements.all()
+        if has_achievement:
+            return False
+        condition_result = eval(str(self.condition))
+        if condition_result:
+            user.achievements.add(self)
+            return True
+        else:
+            return False
 
 
 """
@@ -176,3 +196,10 @@ class Statistic(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='statistics')
     correctly_swiped_taboo_cards = models.IntegerField()
     translated_words = models.IntegerField()
+
+
+@receiver(post_save, sender=Statistic)
+def grant_achievements(sender, instance=None, **kwargs):
+    user = instance.user
+    for achievement in Achievement.objects.all():
+        achievement.try_award_to(user)
