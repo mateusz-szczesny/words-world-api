@@ -2,21 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-from rest_framework.authtoken.models import Token
-
-
-@receiver(post_save, sender=User)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    """
-    Execute after user record save
-    :param sender: User model
-    :param instance: Saved user
-    :param created: Flag if created
-    :param kwargs: Misc
-    :return: None
-    """
-    if created:
-        Token.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)
