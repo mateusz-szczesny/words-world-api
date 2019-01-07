@@ -6,11 +6,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ALLOWED_HOSTS = [ '*', ]
 
+DEBUG = True
+
 if os.environ.get('SECRET_KEY', ''):
-    DEBUG = False
+    pass
 else:
     SECRET_KEY = '!al3ccb4p7u0r6gfe$lj_mif37^nn$oznzx0j2w@h=8b#07xyh'
-    DEBUG = True
 
 
 INSTALLED_APPS = [
