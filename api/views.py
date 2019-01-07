@@ -8,13 +8,11 @@ from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework.viewsets import GenericViewSet
 
-from .models import Language, Answer, Question, Achievement, Score, Round, GivenAnswer, Challenge, UserFollowing, \
-    Statistic
+from .models import Language, Achievement, UserFollowing, Statistic
 from .serializers import (
-    UserFullSerializer, LanguageSerializer, QuestionSerializer,
-    AnswerSerializer, AchievementBaseSerializer, ScoreSerializer,
-    ChallengeSerializer, RoundSerializer, GivenAnswerSerializer,
-    UserAchievementSerializer, UserBaseSerializer, StatisticSerializer)
+    UserFullSerializer, LanguageSerializer, AchievementBaseSerializer,
+    UserAchievementSerializer, UserBaseSerializer, StatisticSerializer
+)
 
 
 class UserViewSet(mixins.ListModelMixin,
@@ -100,7 +98,8 @@ class LanguageViewSet(mixins.ListModelMixin,
     authentication_classes = (TokenAuthentication,)
 
     def list(self, request, *args, **kwargs):
-        serializer = LanguageSerializer(self.queryset, context={"request": request}, many=True)
+        languages = Language.objects.all().order_by('name')
+        serializer = LanguageSerializer(languages, context={"request": request}, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -147,40 +146,3 @@ class StatisticsViewSet(GenericViewSet):
         statistic.save()
 
         return Response(status=status.HTTP_202_ACCEPTED)
-
-
-"""
-TODO: Implement Challenge logic
-"""
-
-
-class QuestionViewSet(viewsets.ModelViewSet):
-    queryset = Question.objects.all()
-    serializer_class = QuestionSerializer
-
-
-class AnswerViewSet(viewsets.ModelViewSet):
-    queryset = Answer.objects.all()
-    serializer_class = AnswerSerializer
-
-
-class ScoreViewSet(viewsets.ModelViewSet):
-    queryset = Score.objects.all()
-    serializer_class = ScoreSerializer
-
-
-class ChallengeViewSet(viewsets.ModelViewSet):
-    queryset = Challenge.objects.all()
-    serializer_class = ChallengeSerializer
-
-
-class RoundViewSet(viewsets.ModelViewSet):
-    queryset = Round.objects.all().order_by('round_number')
-    serializer_class = RoundSerializer
-
-
-class GivenAnswerViewSet(viewsets.ModelViewSet):
-    queryset = GivenAnswer.objects.all()
-    serializer_class = GivenAnswerSerializer
-
-
