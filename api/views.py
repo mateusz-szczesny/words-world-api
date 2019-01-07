@@ -95,7 +95,7 @@ class UserViewSet(mixins.ListModelMixin,
 class LanguageViewSet(mixins.ListModelMixin,
                       mixins.RetrieveModelMixin,
                       GenericViewSet):
-    queryset = Language.objects.order_by('name')
+    queryset = Language.objects.all().order_by('name')
     serializer_class = LanguageSerializer
     authentication_classes = (TokenAuthentication,)
 
