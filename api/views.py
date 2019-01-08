@@ -25,13 +25,6 @@ class UserViewSet(mixins.ListModelMixin,
     search_fields = ('username', 'email')
     authentication_classes = (TokenAuthentication,)
 
-    def list(self, request, *args, **kwargs):
-        user = request.user
-        self.queryset = User.objects.exclude(pk=user.pk)
-
-        serializer = UserAchievementSerializer(self.queryset, context={"request": request}, many=True)
-        return Response(serializer.data)
-
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = UserAchievementSerializer(instance, context={"request": request}, many=False)
@@ -98,8 +91,7 @@ class LanguageViewSet(mixins.ListModelMixin,
     authentication_classes = (TokenAuthentication,)
 
     def list(self, request, *args, **kwargs):
-        languages = Language.objects.all().order_by('name')
-        serializer = LanguageSerializer(languages, context={"request": request}, many=True)
+        serializer = LanguageSerializer(self.queryset, context={"request": request}, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])

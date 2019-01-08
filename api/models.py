@@ -82,7 +82,16 @@ class Statistic(models.Model):
 
 
 @receiver(post_save, sender=Statistic)
-def grant_achievements(sender, instance=None, **kwargs):
-    user = instance.user
+@receiver(post_save, sender=UserFollowing)
+@receiver(post_save, sender=User)
+def trigger_achievements_after_statistics_save(sender, instance=None, created=False, **kwargs):
+    if isinstance(sender, User):
+        if not created:
+            grant_achievements(instance)
+    else:
+        grant_achievements(instance.user)
+
+
+def grant_achievements(user):
     for achievement in Achievement.objects.all():
         achievement.try_award_to(user)
