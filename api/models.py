@@ -85,7 +85,7 @@ class Statistic(models.Model):
 @receiver(post_save, sender=UserFollowing)
 @receiver(post_save, sender=User)
 def trigger_achievements_after_statistics_save(sender, instance=None, created=False, **kwargs):
-    if isinstance(sender, User):
+    if isinstance(instance, User):
         if not created:
             grant_achievements(instance)
     else:
