@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
@@ -7,12 +9,7 @@ from django.db.models.signals import post_save
 @receiver(post_save, sender=User)
 def create_blank_statistics(sender, instance=None, created=False, **kwargs):
     if created:
-        Statistic.objects.create(user=instance, correctly_swiped_taboo_cards=0, translated_words=0)
-
-
-"""
-    Language data model classes for lang definition and answer-question examples storing
-"""
+        Statistic.objects.create(user=instance)
 
 
 class Language(models.Model):
@@ -28,11 +25,6 @@ class Language(models.Model):
             return self.name == other.name
         else:
             return False
-
-
-"""
-    Achievement models 
-"""
 
 
 class Achievement(models.Model):
@@ -65,11 +57,6 @@ class Achievement(models.Model):
             return False
 
 
-"""
-    Extension for default User Model to implement relations between users and statistics 
-"""
-
-
 class UserFollowing(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
     following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_by')
@@ -77,8 +64,46 @@ class UserFollowing(models.Model):
 
 class Statistic(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='statistics')
-    correctly_swiped_taboo_cards = models.IntegerField()
-    translated_words = models.IntegerField()
+    correctly_swiped_taboo_cards = models.IntegerField(default=0)
+    swiped_taboo_cards = models.IntegerField(default=0)
+    translated_words = models.IntegerField(default=0)
+
+    @property
+    def taboo_efficiency(self):
+        if self.swiped_taboo_cards is not 0:
+            return Fraction(self.correctly_swiped_taboo_cards, self.swiped_taboo_cards)
+        else:
+            return 0
+
+
+class TabooCard(models.Model):
+    key_word = models.CharField(max_length=128)
+    black_list = models.CharField(max_length=2048)
+    owner = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='cards')
+    language = models.ForeignKey(Language, on_delete=models.DO_NOTHING, related_name='cards')
+    times_shown = models.IntegerField(default=0)
+    answered_correctly = models.IntegerField(default=0)
+
+    @property
+    def difficulty(self):
+        if self.times_shown is 0:
+            return "NOT ENOUGH STATS"
+        ratio = Fraction(self.answered_correctly, self.times_shown)
+        if 0 <= ratio < 0.25:
+            return "INSANE"
+        elif 0.25 <= ratio < 0.5:
+            return "HARD"
+        elif 0.5 <= ratio < 0.75:
+            return "MEDIUM"
+        elif 0.75 <= ratio:
+            return "EASY"
+
+    @property
+    def card_efficiency(self):
+        if self.times_shown is not 0:
+            return Fraction(self.answered_correctly, self.times_shown)
+        else:
+            return 0
 
 
 @receiver(post_save, sender=Statistic)

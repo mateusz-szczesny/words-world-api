@@ -1,18 +1,18 @@
 from django.contrib.auth.models import User
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status, mixins
+from rest_framework import status, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework.viewsets import GenericViewSet
+from django.db.models import Q
 
-from .models import Language, Achievement, UserFollowing, Statistic
+from .models import Language, UserFollowing, Statistic, TabooCard
 from .serializers import (
-    UserFullSerializer, LanguageSerializer, AchievementBaseSerializer,
-    UserAchievementSerializer, UserBaseSerializer, StatisticSerializer
-)
+    UserFullSerializer, LanguageSerializer, UserAchievementSerializer,
+    UserBaseSerializer, StatisticSerializer, TabooCardSerializer)
 
 
 class UserViewSet(mixins.ListModelMixin,
@@ -115,10 +115,35 @@ class LanguageViewSet(mixins.ListModelMixin,
         return Response(status=status.HTTP_201_CREATED)
 
 
-class AchievementViewSet(viewsets.ModelViewSet):
-    queryset = Achievement.objects.all()
-    serializer_class = AchievementBaseSerializer
+class TabooCardViewSet(mixins.ListModelMixin,
+                       mixins.CreateModelMixin,
+                       GenericViewSet):
+    serializer_class = TabooCardSerializer
     authentication_classes = (TokenAuthentication,)
+
+    def get_queryset(self):
+        return self.request.user.cards.all()
+
+    @action(detail=False, methods=['get'])
+    def random(self, request, *args, **kwargs):
+        user = request.user
+        count = request.query_params.get('card_count', 0)
+        language_id = request.query_params.get('language_id', 0)
+        cards = TabooCard.objects.filter(~Q(pk=user.pk), language__pk=language_id)[:int(count)]
+
+        serializer = TabooCardSerializer(cards, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        language = get_object_or_404(Language, pk=request.data.get('language', 0))
+        card = TabooCard(owner=user, times_shown=0, answered_correctly=0,
+                         key_word=request.data.get('key_word'),
+                         black_list=request.data.get('black_list'),
+                         language=language)
+        card.save()
+        serializer = self.get_serializer(card)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class StatisticsViewSet(GenericViewSet):
@@ -129,12 +154,20 @@ class StatisticsViewSet(GenericViewSet):
     def push(self, request, *args, **kwargs):
         user = request.user
         statistic = get_object_or_404(Statistic, user=user)
-        card_count = request.data.get('correctly_swiped_taboo_cards', 0)
+        correctly_swiped_cards = request.data.get('correctly_swiped_cards', [])
+        incorrectly_swiped_cards = request.data.get('incorrectly_swiped_cards', [])
         translated_words = request.data.get('translated_words', 0)
 
-        statistic.correctly_swiped_taboo_cards += card_count
+        statistic.correctly_swiped_taboo_cards += len(correctly_swiped_cards)
+        statistic.swiped_taboo_cards += len(correctly_swiped_cards) + len(incorrectly_swiped_cards)
         statistic.translated_words += translated_words
 
+        cards_to_update = TabooCard.objects.filter(pk__in=correctly_swiped_cards+incorrectly_swiped_cards)
+        for card in cards_to_update:
+            card.times_shown += 1
+            if str(card.pk) in correctly_swiped_cards:
+                card.answered_correctly += 1
+            card.save()
         statistic.save()
 
         return Response(status=status.HTTP_202_ACCEPTED)

@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from rest_framework import serializers
-from .models import Language, Achievement, UserFollowing, Statistic
+from .models import Language, Achievement, Statistic, TabooCard
 
 
 class AchievementBaseSerializer(serializers.ModelSerializer):
@@ -23,6 +23,13 @@ class UserBaseSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'required': True, 'write_only': True},
                         'first_name': {'read_only': True},
                         'last_name': {'read_only': True}}
+
+
+class LanguageMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Language
+        fields = ('id', 'name', 'language_code')
+        ordering = ('name', )
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -84,27 +91,37 @@ class UserFullSerializer(serializers.ModelSerializer):
     selected_languages = LanguageSerializer(many=True, read_only=True)
     following = serializers.SerializerMethodField()
     overall_score = serializers.SerializerMethodField()
+    taboo_efficiency = serializers.FloatField(source='statistics.taboo_efficiency', read_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'first_name',
-                  'last_name', 'email', 'overall_score', 'achievements',
-                  'selected_languages', 'following')
+        fields = ('id', 'username', 'first_name', 'last_name', 'email',
+                  'overall_score', 'taboo_efficiency',
+                  'achievements', 'selected_languages', 'following')
 
     def get_overall_score(self, obj):
         return obj.achievements.all().aggregate(Sum('score'))
 
     def get_following(self, obj):
-        user = None
-        request = self.context.get("request")
-        if request and hasattr(request, "user"):
-            user = request.user
+        followings = []
+        for follow in obj.following.all():
+            followings.append(follow.following)
+        serializer = UserBaseSerializer(followings, many=True)
+        return serializer.data
 
-        if user:
-            followings = []
-            for follow in user.following.all():
-                followings.append(follow.following)
-            serializer = UserBaseSerializer(followings, many=True)
-            return serializer.data
-        else:
-            return []
+
+class TabooCardSerializer(serializers.ModelSerializer):
+    black_list = serializers.SerializerMethodField()
+    difficulty = serializers.CharField(read_only=True)
+    owner = serializers.ReadOnlyField(source='owner.username')
+    language = LanguageMiniSerializer(many=False, read_only=True)
+    card_efficiency = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = TabooCard
+        fields = ('id', 'key_word', 'black_list', 'card_efficiency',
+                  'difficulty', 'owner', 'language',
+                  'times_shown', 'answered_correctly')
+
+    def get_black_list(self, obj):
+        return str(obj.black_list).split(';')
