@@ -165,7 +165,7 @@ class StatisticsViewSet(GenericViewSet):
         cards_to_update = TabooCard.objects.filter(pk__in=correctly_swiped_cards+incorrectly_swiped_cards)
         for card in cards_to_update:
             card.times_shown += 1
-            if str(card.pk) in correctly_swiped_cards:
+            if card.pk in correctly_swiped_cards:
                 card.answered_correctly += 1
             card.save()
         statistic.save()
