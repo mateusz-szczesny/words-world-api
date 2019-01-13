@@ -105,6 +105,9 @@ class TabooCard(models.Model):
         else:
             return 0
 
+    def __str__(self):
+        return self.pk + ' | ' + self.key_word + ' | ' + self.language.language_code
+
 
 @receiver(post_save, sender=Statistic)
 @receiver(post_save, sender=UserFollowing)
