@@ -71,7 +71,7 @@ class Statistic(models.Model):
     @property
     def taboo_efficiency(self):
         if self.swiped_taboo_cards is not 0:
-            return Fraction(self.correctly_swiped_taboo_cards, self.swiped_taboo_cards)
+            return round(Fraction(self.correctly_swiped_taboo_cards, self.swiped_taboo_cards), 2)
         else:
             return 0
 
@@ -101,7 +101,7 @@ class TabooCard(models.Model):
     @property
     def card_efficiency(self):
         if self.times_shown is not 0:
-            return Fraction(self.answered_correctly, self.times_shown)
+            return round(Fraction(self.answered_correctly, self.times_shown), 2)
         else:
             return 0
 
