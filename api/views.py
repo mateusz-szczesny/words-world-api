@@ -7,7 +7,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework.viewsets import GenericViewSet
-from django.db.models import Q
 
 from .models import Language, UserFollowing, Statistic, TabooCard
 from .serializers import (
@@ -126,10 +125,9 @@ class TabooCardViewSet(mixins.ListModelMixin,
 
     @action(detail=False, methods=['get'])
     def random(self, request, *args, **kwargs):
-        user = request.user
         count = request.query_params.get('card_count', 0)
         language_id = request.query_params.get('language_id', 0)
-        cards = TabooCard.objects.all().filter(~Q(pk=user.pk), language__pk=language_id)[:int(count)]
+        cards = TabooCard.objects.filter(language__pk=language_id)[:int(count)]
 
         serializer = TabooCardSerializer(cards, many=True)
         return Response(serializer.data)
@@ -162,7 +160,7 @@ class StatisticsViewSet(GenericViewSet):
         statistic.swiped_taboo_cards += len(correctly_swiped_cards) + len(incorrectly_swiped_cards)
         statistic.translated_words += translated_words
 
-        cards_to_update = TabooCard.objects.all().filter(pk__in=correctly_swiped_cards+incorrectly_swiped_cards)
+        cards_to_update = TabooCard.objects.filter(pk__in=correctly_swiped_cards+incorrectly_swiped_cards)
         for card in cards_to_update:
             card.times_shown += 1
             if card.pk in correctly_swiped_cards:
