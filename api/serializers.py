@@ -92,11 +92,13 @@ class UserFullSerializer(serializers.ModelSerializer):
     following = serializers.SerializerMethodField()
     overall_score = serializers.SerializerMethodField()
     taboo_efficiency = serializers.FloatField(source='statistics.taboo_efficiency', read_only=True)
+    swiped_taboo_cards = serializers.FloatField(source='statistics.swiped_taboo_cards', read_only=True)
+    correctly_swiped_taboo_cards = serializers.FloatField(source='statistics.correctly_swiped_taboo_cards', read_only=True)
 
     class Meta:
         model = User
         fields = ('id', 'username', 'first_name', 'last_name', 'email',
-                  'overall_score', 'taboo_efficiency',
+                  'overall_score', 'taboo_efficiency', 'swiped_taboo_cards', 'correctly_swiped_taboo_cards',
                   'achievements', 'selected_languages', 'following')
 
     def get_overall_score(self, obj):
