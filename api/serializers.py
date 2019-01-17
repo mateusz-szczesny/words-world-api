@@ -93,12 +93,17 @@ class UserFullSerializer(serializers.ModelSerializer):
     overall_score = serializers.SerializerMethodField()
     taboo_efficiency = serializers.FloatField(source='statistics.taboo_efficiency', read_only=True)
     swiped_taboo_cards = serializers.FloatField(source='statistics.swiped_taboo_cards', read_only=True)
-    correctly_swiped_taboo_cards = serializers.FloatField(source='statistics.correctly_swiped_taboo_cards', read_only=True)
+    correctly_swiped_taboo_cards = serializers.FloatField(
+        source='statistics.correctly_swiped_taboo_cards',
+        read_only=True)
+    ans_flashcards = serializers.FloatField(source='statistics.ans_flashcards', read_only=True)
+    correctly_ans_flashcards = serializers.FloatField(source='statistics.correctly_ans_flashcards', read_only=True)
 
     class Meta:
         model = User
         fields = ('id', 'username', 'first_name', 'last_name', 'email',
                   'overall_score', 'taboo_efficiency', 'swiped_taboo_cards', 'correctly_swiped_taboo_cards',
+                  'ans_flashcards', 'correctly_ans_flashcards',
                   'achievements', 'selected_languages', 'following')
 
     def get_overall_score(self, obj):
@@ -127,3 +132,21 @@ class TabooCardSerializer(serializers.ModelSerializer):
 
     def get_black_list(self, obj):
         return str(obj.black_list).split(';')
+
+
+class FlashCardSerializer(serializers.ModelSerializer):
+    language = serializers.CharField(source='language.language_code', read_only=True)
+    word = serializers.CharField(source='key_word', read_only=True)
+
+    class Meta:
+        model = TabooCard
+        fields = ('id', 'word', 'language',)
+
+
+class RandomWordSerializer(serializers.ModelSerializer):
+    word = serializers.CharField(source='key_word', read_only=True)
+    language = LanguageMiniSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = TabooCard
+        fields = ('id', 'word', 'language',)

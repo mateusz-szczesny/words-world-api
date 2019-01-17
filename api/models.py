@@ -66,6 +66,8 @@ class Statistic(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='statistics')
     correctly_swiped_taboo_cards = models.IntegerField(default=0)
     swiped_taboo_cards = models.IntegerField(default=0)
+    correctly_ans_flashcards = models.IntegerField(default=0)
+    ans_flashcards = models.IntegerField(default=0)
     translated_words = models.IntegerField(default=0)
 
     @property
